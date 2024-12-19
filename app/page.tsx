@@ -1,101 +1,165 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import React, { useState } from 'react'
+import { calculateViability, type VariableSet } from './utils/calculator'
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default function VerificadorViabilidade() {
+    const [produto, setProduto] = useState('')
+    const [coeficientes, setCoeficientes] = useState(['', '', ''])
+    const [restricoes, setRestricoes] = useState(['', '', ''])
+    const [limite, setLimite] = useState('')
+    const [resultado, setResultado] = useState<{
+        isViable: boolean;
+        equations: string[];
+        totalValue: number;
+    } | null>(null)
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+
+        const variables: VariableSet = {
+            name: produto,
+            coefficients: coeficientes.map(c => Number(c)),
+            constraints: restricoes.map(r => Number(r)),
+            limit: Number(limite)
+        }
+
+        const result = calculateViability(variables)
+        setResultado(result)
+    }
+
+    return (
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>Verificador de Viabilidade - {produto || 'Novo Produto'}</h1>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                    <label htmlFor="produto" style={{ display: 'block', marginBottom: '5px' }}>Nome do Produto</label>
+                    <input
+                        id="produto"
+                        style={{
+                            width: '100%',
+                            padding: '8px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            color: '#000' // Define apenas a cor da fonte como preta
+                        }}
+                        value={produto}
+                        onChange={(e) => setProduto(e.target.value)}
+                        placeholder="Ex: COMPUTADOR ou BOLSAS"
+                        required
+                    />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                        <h3 style={{ marginBottom: '10px' }}>Coeficientes</h3>
+                        {coeficientes.map((coef, index) => (
+                            <div key={`coef-${index}`} style={{ marginBottom: '10px' }}>
+                                <label htmlFor={`coef-${index}`} style={{ display: 'block', marginBottom: '5px' }}>X{index + 1}</label>
+                                <input
+                                    id={`coef-${index}`}
+                                    type="number"
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        color: '#000' // Define apenas a cor da fonte como preta
+                                    }}
+                                    value={coef}
+                                    onChange={(e) => {
+                                        const novosCoefs = [...coeficientes]
+                                        novosCoefs[index] = e.target.value
+                                        setCoeficientes(novosCoefs)
+                                    }}
+                                    placeholder={`Coeficiente X${index + 1}`}
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    <div>
+                        <h3 style={{ marginBottom: '10px' }}>Restrições</h3>
+                        {restricoes.map((restricao, index) => (
+                            <div key={`restricao-${index}`} style={{ marginBottom: '10px' }}>
+                                <label htmlFor={`restricao-${index}`} style={{ display: 'block', marginBottom: '5px' }}>Restrição {index + 1}</label>
+                                <input
+                                    id={`restricao-${index}`}
+                                    type="number"
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        color: '#000' // Define apenas a cor da fonte como preta
+                                    }}
+                                    value={restricao}
+                                    onChange={(e) => {
+                                        const novasRestricoes = [...restricoes]
+                                        novasRestricoes[index] = e.target.value
+                                        setRestricoes(novasRestricoes)
+                                    }}
+                                    placeholder={`Valor da restrição ${index + 1}`}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div>
+                    <label htmlFor="limite" style={{ display: 'block', marginBottom: '5px' }}>Limite</label>
+                    <input
+                        id="limite"
+                        type="number"
+                        style={{
+                            width: '100%',
+                            padding: '8px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            color: '#000' // Define apenas a cor da fonte como preta
+                        }}
+                        value={limite}
+                        onChange={(e) => setLimite(e.target.value)}
+                        placeholder="Valor limite"
+                        required
+                    />
+                </div>
+
+                <button type="submit" style={{
+                    backgroundColor: '#4CAF50',
+                    border: 'none',
+                    color: 'white',
+                    padding: '15px 32px',
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                    fontSize: '16px',
+                    margin: '4px 2px',
+                    cursor: 'pointer',
+                    borderRadius: '4px'
+                }}>
+                    Verificar Viabilidade
+                </button>
+            </form>
+
+            {resultado && (
+                <div style={{ marginTop: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '4px' }}>
+                    <h3 style={{ marginBottom: '10px' }}>Resultado da Análise</h3>
+                    <div>
+                        <p>Equações:</p>
+                        <ul style={{ paddingLeft: '20px' }}>
+                            {resultado.equations.map((eq, i) => (
+                                <li key={i}>{eq}</li>
+                            ))}
+                        </ul>
+                        <p>Valor Total: {resultado.totalValue}</p>
+                        <p>Limite: {limite}</p>
+                        <p style={{ fontWeight: 'bold', color: resultado.isViable ? 'green' : 'red' }}>
+                            Resultado: {resultado.isViable ? 'Viável' : 'Não Viável'}
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    )
 }
