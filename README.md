@@ -19,3 +19,5 @@ Este projeto utiliza [`next/font`](https://nextjs.org/docs/app/building-your-app
 ## Motivo do APP
 
 Este app (frontend) é um trabalho da Faculdade Fametro,a qual eu curso, da matéria de Tópicos Especiais que verifica viabilidade do produto em empresas do PIM.
+
+Deploy: https://verificador-viabilidade-produto.vercel.app/
